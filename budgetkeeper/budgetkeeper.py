@@ -2,6 +2,11 @@
 import datetime
 from dateutil.relativedelta import relativedelta
 
+MONTHLY = relativedelta(months=1)
+BIWEEKLY = relativedelta(weeks=2)
+DAILY = relativedelta(days=1)
+ANNUALLY = relativedelta(years=1)
+
 try:
     from cDecimal import Decimal
 except ImportError:
