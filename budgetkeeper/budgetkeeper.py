@@ -39,6 +39,7 @@ class Account(object):
     '''
     def __init__(self):
         self.transactions = []
+        self.budgets = []
 
         # TODO: Load everything from disk
 
@@ -87,6 +88,37 @@ class Account(object):
         '''Trigger all recurring transactions.'''
         pass
 
+    def add_budget(self, name, interval=None, limit=100, description=""):
+        budget = Budget(name=name, interval=interval, limit=Decimal(limit), description=description)
+        self.budgets.append(budget)
+
+    def get_budget_totals(self):
+        '''Get a dict of totals for all budgets.
+        >>> account = Account()
+        >>> account.add_budget('Thing')
+        >>> account.add_purchase(100, description='Morning Coffee', category='Thing')
+        >>> account.get_budget_totals()
+        {'Thing': Decimal('100.00')}
+        '''
+        totals = {}
+        for budget in self.budgets:
+            totals[budget.name] = 0
+            for purchase in self.transactions:
+                if purchase.direction < 0: # If its direction says its a debit
+                    if purchase.category == budget.name:
+                        totals[budget.name] += purchase.amount
+            totals[budget.name] = totals[budget.name].quantize(Decimal('0.01'))
+        return totals
+
+
+class Budget(object):
+    '''Budgets are categories that purchases fall under.
+    '''
+    def __init__(self, name, interval=None, limit=100, description=""):
+        self.name = name
+        self.interval = interval
+        self.limit = limit
+        self.description = description
 
 class Transaction(object):
     '''Transactions are any money going in or out of an Account.'''
