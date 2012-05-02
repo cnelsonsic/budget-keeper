@@ -1,6 +1,8 @@
 import unittest
 from decimal import Decimal
 
+from datetime import datetime
+
 from budgetkeeper.budgetkeeper import Account, MONTHLY
 
 class TestAccount(unittest.TestCase):
@@ -12,20 +14,26 @@ class TestAccount(unittest.TestCase):
     def test_add_bill(self):
         account = Account()
         bill = account.add_bill(amount=100, description="Electricity", interval=MONTHLY)
+        self.assertIn(bill, account.transactions)
         self.assertEqual(bill.amount, Decimal('100.00'))
         self.assertEqual(bill.description, 'Electricity')
         self.assertEqual(bill.interval, MONTHLY)
-        self.assertIn(bill, account.transactions)
 
     def test_add_budget(self):
-        # account = Account()
-        # self.assertEqual(expected, account.add_budget(name, interval, limit, description))
-        assert False # TODO: implement your test here
+        account = Account()
+        budget = account.add_budget(name='Test Budget', interval=MONTHLY, limit=1000)
+        self.assertIn(budget, account.budgets)
+        self.assertEqual(budget.name, 'Test Budget')
+        self.assertEqual(budget.interval, MONTHLY)
+        self.assertEqual(budget.limit, Decimal('1000.00'))
 
     def test_add_income(self):
-        # account = Account()
-        # self.assertEqual(expected, account.add_income(amount, description, timestamp, category))
-        assert False # TODO: implement your test here
+        account = Account()
+        income = account.add_income(amount=1000, description="Gift", timestamp=datetime(2012, 1, 1))
+        self.assertIn(income, account.transactions)
+        self.assertEqual(income.amount, Decimal('1000.00'))
+        self.assertEqual(income.description, 'Gift')
+        self.assertEqual(income.timestamp, datetime(2012, 1, 1))
 
     def test_add_paycheck(self):
         # account = Account()
@@ -38,14 +46,20 @@ class TestAccount(unittest.TestCase):
         assert False # TODO: implement your test here
 
     def test_balance(self):
-        # account = Account()
-        # self.assertEqual(expected, account.balance())
-        assert False # TODO: implement your test here
+        account = Account()
+        account.add_income(amount=100)
+        result = account.balance
+        expected = Decimal(100)
+        self.assertEqual(expected, result)
 
     def test_get_budget_totals(self):
-        # account = Account()
-        # self.assertEqual(expected, account.get_budget_totals())
-        assert False # TODO: implement your test here
+        account = Account()
+        account.add_budget('Groceries', interval=MONTHLY, limit=1000)
+        account.add_purchase(100, category='Groceries')
+
+        result = account.get_budget_totals()
+        expected = {'Groceries': Decimal(100)}
+        self.assertEqual(result, expected)
 
     def test_parse_message(self):
         # account = Account()
