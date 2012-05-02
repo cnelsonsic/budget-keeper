@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 
 MONTHLY = relativedelta(months=1)
 BIWEEKLY = relativedelta(weeks=2)
+BIMONTHLY = BIWEEKLY # I never really did understand this, but whatever.
 DAILY = relativedelta(days=1)
 ANNUALLY = relativedelta(years=1)
 
