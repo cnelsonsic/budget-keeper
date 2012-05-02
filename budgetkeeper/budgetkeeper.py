@@ -19,7 +19,8 @@ class Account(object):
     >>> account = Account()
 
     You can add a one-time income to your account like so:
-    >>> account.add_income(100.00, description="Gift from Grandma")
+    >>> account.add_income(100.00, description="Gift from Grandma", timestamp=datetime.datetime(2012, 1, 1))
+    Income(amount=Decimal('100'), description='Gift from Grandma', timestamp=datetime.datetime(2012, 1, 1, 0, 0), category=None)
 
     And check your current balance.
     >>> account.balance
@@ -61,6 +62,7 @@ class Account(object):
     def add_income(self, amount, description="", timestamp=None, category=None):
         income = Income(amount=Decimal(amount), description=description, timestamp=timestamp, category=category)
         self.transactions.append(income)
+        return income
 
     def add_purchase(self, amount, description="", timestamp=None, category=None):
         purchase = Purchase(amount=Decimal(amount), description=description, timestamp=timestamp, category=category)
@@ -154,6 +156,9 @@ class Transaction(object):
 class Income(Transaction):
     '''Income is money going into the account.'''
     direction = +1
+
+    def __repr__(self):
+        return "Income(amount=%(amount)r, description=%(description)r, timestamp=%(timestamp)r, category=%(category)r)" % self.__dict__
 
 class Purchase(Transaction):
     '''An Expense is money going out of the account.'''
