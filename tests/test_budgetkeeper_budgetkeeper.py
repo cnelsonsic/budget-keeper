@@ -1,14 +1,21 @@
 import unittest
+from decimal import Decimal
+
+from budgetkeeper.budgetkeeper import Account, MONTHLY
 
 class TestAccount(unittest.TestCase):
     def test___init__(self):
-        # account = Account()
-        assert False # TODO: implement your test here
+        account = Account()
+        self.assertEqual(len(account.transactions), 0)
+        self.assertEqual(len(account.budgets), 0)
 
     def test_add_bill(self):
-        # account = Account()
-        # self.assertEqual(expected, account.add_bill(amount, description, timestamp, category, interval))
-        assert False # TODO: implement your test here
+        account = Account()
+        bill = account.add_bill(amount=100, description="Electricity", interval=MONTHLY)
+        self.assertEqual(bill.amount, Decimal('100.00'))
+        self.assertEqual(bill.description, 'Electricity')
+        self.assertEqual(bill.interval, MONTHLY)
+        self.assertIn(bill, account.transactions)
 
     def test_add_budget(self):
         # account = Account()
@@ -49,6 +56,7 @@ class TestAccount(unittest.TestCase):
         # account = Account()
         # self.assertEqual(expected, account.trigger_recurring(timestamp))
         assert False # TODO: implement your test here
+
 
 class TestTransaction(unittest.TestCase):
     def test___init__(self):

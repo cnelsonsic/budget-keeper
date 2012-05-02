@@ -29,16 +29,20 @@ class Account(object):
     >>> account.add_purchase(4.12, description="Morning Coffee")
 
     As well as bills recurring on an interval:
-    >>> monthly = relativedelta(months=1)
-    >>> account.add_bill(100.00, description="Internet", interval=monthly)
+    >>> account.add_bill(100.00, description="Internet", interval=MONTHLY, timestamp=datetime.datetime(2012, 1, 1))
+    Bill(amount=Decimal('100'), description='Internet', timestamp=datetime.datetime(2012, 1, 1, 0, 0), category=None, interval=relativedelta(months=+1))
 
     And also paychecks (income on an interval):
-    >>> bimonthly = relativedelta(weeks=2)
-    >>> account.add_paycheck(1000.00, description="Paycheck from WebApps Inc.", interval=bimonthly)
+    >>> account.add_paycheck(1000.00, description="Paycheck from WebApps Inc.", interval=BIMONTHLY)
+
+    Adding a budget for something is easy enough:
+    >>> account.add_budget('Groceries', interval=MONTHLY, limit=100, description="Monthly grocery allowance.")
+    Budget(name='Groceries', interval=relativedelta(months=+1), limit=Decimal('100'), description='Monthly grocery allowance.')
 
     Note that adding a recurring debit or credit will add it to your account balance immediately.
     It WILL NOT wait for the next recurrance.
 
+    Getting the balance is just this easy:
     >>> account.balance
     Decimal('995.88')
 
@@ -65,6 +69,7 @@ class Account(object):
     def add_bill(self, amount, description="", timestamp=None, category=None, interval=None):
         bill = Bill(amount=Decimal(amount), description=description, timestamp=timestamp, category=category, interval=interval)
         self.transactions.append(bill)
+        return bill
 
     def add_paycheck(self, amount, description="", timestamp=None, category=None, interval=None):
         paycheck = PayCheck(amount=Decimal(amount), description=description, timestamp=timestamp, category=category, interval=interval)
@@ -87,6 +92,11 @@ class Account(object):
         so it just uses the whole thing.
         >>> account.parse_message("[18:34] <joe> I bought a new widget today, was only $0.99")
         Purchase(amount=0.99, description="I bought a new widget today, was only $0.99")
+
+        Adding budget categories is easy too, as long as it matches a budget category:
+        The ideal format is "Paid ${money} for ${budget_category}"
+        >>> account.parse_message('Paid $14.57 for groceries.')
+        Purchase(amount=14.57, category='groceries')
         '''
         pass
 
@@ -97,11 +107,12 @@ class Account(object):
     def add_budget(self, name, interval=None, limit=100, description=""):
         budget = Budget(name=name, interval=interval, limit=Decimal(limit), description=description)
         self.budgets.append(budget)
+        return budget
 
     def get_budget_totals(self):
         '''Get a dict of totals for all budgets.
         >>> account = Account()
-        >>> account.add_budget('Thing')
+        >>> budget = account.add_budget('Thing')
         >>> account.add_purchase(100, description='Morning Coffee', category='Thing')
         >>> account.get_budget_totals()
         {'Thing': Decimal('100.00')}
@@ -126,12 +137,16 @@ class Budget(object):
         self.limit = limit
         self.description = description
 
+    def __repr__(self):
+        return 'Budget(name=%(name)r, interval=%(interval)r, limit=%(limit)r, description=%(description)r)' % self.__dict__
+
 class Transaction(object):
     '''Transactions are any money going in or out of an Account.'''
     direction = 0
     def __init__(self, amount=0, description="", timestamp=None, category=None):
         if not timestamp:
             timestamp = datetime.datetime.now()
+        self.timestamp = timestamp
         self.amount = amount
         self.description = description
         self.category = category
@@ -157,4 +172,7 @@ class Bill(Purchase):
         super(Bill, self).__init__(amount=amount, description=description,
                                    timestamp=timestamp, category=category)
         self.interval = interval
+
+    def __repr__(self):
+        return 'Bill(amount=%(amount)r, description=%(description)r, timestamp=%(timestamp)r, category=%(category)r, interval=%(interval)r)' % self.__dict__
 
