@@ -69,12 +69,12 @@ class TestAccount(unittest.TestCase):
     def test_parse_message(self):
         # account = Account()
         # self.assertEqual(expected, account.parse_message(message))
-        assert False # TODO: implement your test here
+        self.skip("TODO: Not Implemented")
 
     def test_trigger_recurring(self):
         # account = Account()
         # self.assertEqual(expected, account.trigger_recurring(timestamp))
-        assert False # TODO: implement your test here
+        self.skip("TODO: Not Implemented")
 
 class TestMessage(unittest.TestCase):
 
@@ -100,22 +100,22 @@ class TestMessage(unittest.TestCase):
 class TestTransaction(unittest.TestCase):
     def test___init__(self):
         # transaction = Transaction(amount, description, timestamp, category)
-        assert False # TODO: implement your test here
+        self.skip("TODO: Not Implemented")
 
 class TestPayCheck(unittest.TestCase):
     def test___init__(self):
         # pay_check = PayCheck(amount, description, timestamp, category, interval)
-        assert False # TODO: implement your test here
+        self.skip("TODO: Not Implemented")
 
 class TestBill(unittest.TestCase):
     def test___init__(self):
         # bill = Bill(amount, description, timestamp, category, interval)
-        assert False # TODO: implement your test here
+        self.skip("TODO: Not Implemented")
 
 class TestBudget(unittest.TestCase):
     def test___init__(self):
         # budget = Budget(name, interval, limit, description)
-        assert False # TODO: implement your test here
+        self.skip("TODO: Not Implemented")
 
 if __name__ == '__main__':
     unittest.main()
