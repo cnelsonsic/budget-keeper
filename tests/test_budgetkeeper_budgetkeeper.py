@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from datetime import datetime
 
-from budgetkeeper.budgetkeeper import Account, MONTHLY
+from budgetkeeper.budgetkeeper import Account, Message, MONTHLY
 
 class TestAccount(unittest.TestCase):
     def test___init__(self):
@@ -75,6 +75,26 @@ class TestAccount(unittest.TestCase):
         # account = Account()
         # self.assertEqual(expected, account.trigger_recurring(timestamp))
         assert False # TODO: implement your test here
+
+class TestMessage(unittest.TestCase):
+
+    def test_get_money(self):
+        test_data = (('$4.12', '4.12'),
+                     ('4.12', '4.12'),
+                     ('.12', '.12'),
+                     ('Paid $4.12 for a latte.', '4.12'),
+                     ('Paid $14.57 for a book from the used bookstore.', '14.57'),
+                     ('Bought a new pair of pants for $5. Quite a steal.', '5'),
+                     ("[18:34] <joe> I bought a new widget today, was only $0.99.", '0.99'),
+                     ('Paid $14.57 for groceries.', '14.57'),
+                     ('Paid $14.57 for $5 worth of groceries. What a deal!', '14.57'),
+                     ('Paid 45 bux for some turnips.', '45'),
+                     )
+        for message, expected in test_data:
+            result = Message.get_money(message)
+            print message,
+            self.assertEqual(expected, result)
+            print 'OK'
 
 
 class TestTransaction(unittest.TestCase):
