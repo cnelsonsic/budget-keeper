@@ -1,4 +1,5 @@
 
+import re
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -137,6 +138,24 @@ class Account(object):
                         totals[budget.name] += purchase.amount
             totals[budget.name] = totals[budget.name].quantize(Decimal('0.01'))
         return totals
+
+class Message(object):
+    only_money = re.compile(r'^\$?(\d*(\.\d\d?)?|\d+).*$')
+
+    @staticmethod
+    def get_money(message):
+        '''Gets the first thing that looks like money from a message.
+        >>> Message.get_money('$4.12')
+        '4.12'
+        >>> Message.get_money('4.12')
+        '4.12'
+        >>> Message.get_money("[18:34] <joe> I bought a new widget today, was only $0.99.")
+        '0.99'
+        '''
+        for word in message.split(' '):
+            result = Message.only_money.findall(word)[0][0]
+            if result:
+                return result
 
 class ReprableClass(object):
     def __repr__(self):
