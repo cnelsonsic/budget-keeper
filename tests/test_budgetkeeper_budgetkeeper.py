@@ -36,14 +36,19 @@ class TestAccount(unittest.TestCase):
         self.assertEqual(income.timestamp, datetime(2012, 1, 1))
 
     def test_add_paycheck(self):
-        # account = Account()
-        # self.assertEqual(expected, account.add_paycheck(amount, description, timestamp, category, interval))
-        assert False # TODO: implement your test here
+        account = Account()
+        paycheck = account.add_paycheck(1000, description="Paycheck from WebApps Inc.", interval=MONTHLY)
+        self.assertIn(paycheck, account.transactions)
+        self.assertEqual(paycheck.amount, Decimal('1000.00'))
+        self.assertIn('WebApps Inc.', paycheck.description)
+        self.assertEqual(paycheck.interval, MONTHLY)
 
     def test_add_purchase(self):
-        # account = Account()
-        # self.assertEqual(expected, account.add_purchase(amount, description, timestamp, category))
-        assert False # TODO: implement your test here
+        account = Account()
+        purchase = account.add_purchase(1000, description="Morning Coffee")
+        self.assertIn(purchase, account.transactions)
+        self.assertEqual(purchase.amount, Decimal('1000.00'))
+        self.assertEqual('Morning Coffee', purchase.description)
 
     def test_balance(self):
         account = Account()
