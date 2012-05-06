@@ -86,30 +86,39 @@ class Account(object):
         self.transactions.append(paycheck)
         return paycheck
 
-    def parse_message(self, message):
+    def parse_message(self, message, timestamp=None):
         '''
         >>> account = Account()
 
         It will also parse emails and other messages like so:
         The ideal format is "Paid ${money} for ${description}"
-        >>> account.parse_message('Paid $14.57 for a book from the used bookstore.')
-        Purchase(amount=14.57, description="A book from the used bookstore.')
+        >>> account.parse_message('Paid $14.57 for a book from the used bookstore.') # doctest: +ELLIPSIS
+        Purchase(amount=Decimal('14.57'), category=None, description='A book from the used bookstore.', ...)
 
         Another format is like "Bought ${description} for ${money} ${more_description}"
-        >>> account.parse_message("Bought a new pair of pants for $5. Quite a steal.")
-        Purchase(amount=5, description="A new pair of pants. Quite a steal.")
+        >>> account.parse_message("Bought a new pair of pants for $5. Quite a steal.") # doctest: +ELLIPSIS
+        Purchase(amount=Decimal('5.00'), category=None, description='A new pair of pants. Quite a steal.', ...)
 
         Sometimes it's not smart enough to parse out a meaningful description,
         so it just uses the whole thing.
-        >>> account.parse_message("[18:34] <joe> I bought a new widget today, was only $0.99")
-        Purchase(amount=0.99, description="I bought a new widget today, was only $0.99")
+        >>> account.parse_message("[18:34] <joe> I bought a new widget today, was only $0.99") # doctest: +ELLIPSIS
+        Purchase(amount=Decimal('0.99'), category=None, description='[18:34] <joe> I bought a new widget today, was only $0.99', ...)
 
         Adding budget categories is easy too, as long as it matches a budget category:
         The ideal format is "Paid ${money} for ${budget_category}"
-        >>> account.parse_message('Paid $14.57 for groceries.')
-        Purchase(amount=14.57, category='groceries')
+        >>> _ = account.add_budget('Groceries', interval=MONTHLY, limit=100, description="Monthly grocery allowance.")
+        >>> account.parse_message('Paid $14.57 for groceries.') # doctest: +ELLIPSIS
+        Purchase(amount=Decimal('14.57'), category='groceries', ...)
         '''
-        pass
+        amount = Message.get_money(message)
+        description = Message.get_description(message)
+        for budget in self.budgets:
+            # if description (minus nonletter characters) in categories:
+            category = re.sub(r'[^\w]*', '', description).lower()
+            if budget.name.lower() in category.lower():
+                # Set the category instead fo the description
+                return self.add_purchase(amount, category=category, timestamp=timestamp)
+        return self.add_purchase(amount, description, timestamp)
 
     def trigger_recurring(self, timestamp=None):
         '''Trigger all recurring transactions.'''
@@ -140,7 +149,8 @@ class Account(object):
         return totals
 
 class Message(object):
-    only_money = re.compile(r'^\$?(\d*(\.\d\d?)?|\d+).*$')
+    money = r'\$?(\d*(\.\d\d?)?|\d+)'
+    only_money = re.compile(r'^%s.*$' % money)
 
     @staticmethod
     def get_money(message):
@@ -156,6 +166,51 @@ class Message(object):
             result = Message.only_money.findall(word)[0][0]
             if result:
                 return result
+
+    @staticmethod
+    def get_description(message):
+        '''
+        It will also parse emails and other messages like so:
+        The ideal format is "Paid ${money} for ${description}"
+        >>> Message.get_description('Paid $14.57 for a book from the used bookstore.')
+        'A book from the used bookstore.'
+
+        Adding budget categories is easy too, as long as it matches a budget category:
+        The ideal format is "Paid ${money} for ${budget_category}"
+        >>> Message.get_description('Paid $14.57 for groceries.')
+        'Groceries.'
+
+        Another format is like "Bought ${description} for ${money} ${more_description}"
+        >>> Message.get_description("Bought a new pair of pants for $5. Quite a steal.")
+        'A new pair of pants. Quite a steal.'
+
+        Sometimes it's not smart enough to parse out a meaningful description,
+        so it just uses the whole thing.
+        >>> Message.get_description("[18:34] <joe> I bought a new widget today, was only $0.99")
+        '[18:34] <joe> I bought a new widget today, was only $0.99'
+        '''
+        # Try to match the well behaved version first:
+        description = re.match(r'paid .* for (?P<description>.*)', message.lower(), flags=re.IGNORECASE)
+        if description:
+            if description.group('description'):
+                return description.group('description').capitalize()
+
+        # Try getting the extended description version:
+        # Remove the money from the message.
+        money = re.escape(Message.get_money(message))
+        regex = r"( ?\$?(%s)[ ]?)" % money
+        msg = re.sub(regex, '', message, count=1)
+
+        # Now grab all the parts of our description.
+        ext_desc = r'bought (?P<description>.*) for[ ]?(?P<more_description>.*)'
+        extended_desc = re.match(ext_desc, msg, flags=re.IGNORECASE)
+        if extended_desc:
+            if extended_desc.group('description') or extended_desc.group('more_description'):
+                return (extended_desc.group('description').capitalize() + extended_desc.group('more_description'))
+
+        # Nothing matched, just return the whole thing.
+        return message
+
 
 class ReprableClass(object):
     def __repr__(self):
