@@ -109,19 +109,40 @@ class Account(object):
         >>> _ = account.add_budget('Groceries', interval=MONTHLY, limit=100, description="Monthly grocery allowance.")
         >>> account.parse_message('Paid $14.57 for groceries.') # doctest: +ELLIPSIS
         Purchase(amount=Decimal('14.57'), category='groceries', ...)
-        '''
-        amount = Message.get_money(message)
-        if not amount:
-            return
 
-        description = Message.get_description(message)
-        for budget in self.budgets:
-            # if description (minus nonletter characters) in categories:
-            category = re.sub(r'[^\w]*', '', description).lower()
-            if budget.name.lower() in category.lower():
-                # Set the category instead fo the description
-                return self.add_purchase(amount, category=category, timestamp=timestamp)
-        return self.add_purchase(amount, description, timestamp)
+        You can also add multiple expenditures to multiple categories:
+        # TODO: Split by "and" and ", ", then parse each hunk individually.
+        # Or maybe put it in the body as multiple lines.
+        >>> _ = account.add_budget('Groceries', interval=MONTHLY, limit=100, description="Monthly grocery allowance.")
+        >>> _ = account.add_budget('Booze', interval=MONTHLY, limit=100, description="Monthly booze allowance.")
+        >>> account.parse_message('Paid $14.57 for groceries and $50 for booze.') # doctest: +ELLIPSIS
+        [Purchase(amount=Decimal('14.57'), category='groceries', ...), Purchase(amount=Decimal('50.00'), category='booze', ...)]
+        '''
+        parts = message.split('and')
+        purchases = []
+        for message in parts:
+#             print 'message', message
+            amount = Message.get_money(message)
+#             print 'amount', amount
+            if not amount:
+                return
+
+            description = Message.get_description(message)
+#             print 'description', description
+
+            purchase = None
+
+            # Is any of our budget names in the description?
+            for budget in self.budgets:
+                # if description (minus nonletter characters) in categories:
+                category = re.sub(r'[^\w]*', '', description).lower()
+                if budget.name.lower() in category.lower():
+                    # Set the category instead of the description
+                    purchase = self.add_purchase(amount, category=category, timestamp=timestamp)
+                    break
+
+            purchases.append(purchase or self.add_purchase(amount, description, timestamp))
+        return purchases[0] if len(purchases) == 1 else purchases
 
     def trigger_recurring(self, timestamp=None):
         '''Trigger all recurring transactions.'''
@@ -193,9 +214,13 @@ class Message(object):
         '[18:34] <joe> I bought a new widget today, was only $0.99'
         '''
         # Try to match the well behaved version first:
-        description = re.match(r'paid .* for (?P<description>.*)', message.lower(), flags=re.IGNORECASE)
+        description = re.match(r'(?:paid )?(?:bought )?(?P<first_desc>.*) for (?P<description>.*)', message.lower(), flags=re.IGNORECASE)
         if description:
-            if description.group('description'):
+            # If the first part of the description is actually money,
+            # Then use this well behaved version, if it's actually more
+            # description, move on to the extended description version.
+            first_desc_is_money = Message.get_money(description.group('first_desc'))
+            if description.group('description') and first_desc_is_money:
                 return description.group('description').capitalize()
 
         # Try getting the extended description version:

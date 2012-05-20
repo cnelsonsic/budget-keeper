@@ -89,6 +89,8 @@ class TestMessage(unittest.TestCase):
                      ('Paid $14.57 for groceries.', '14.57'),
                      ('Paid $14.57 for $5 worth of groceries. What a deal!', '14.57'),
                      ('Paid 45 bux for some turnips.', '45'),
+                     ('100: games', '100'),
+                     ('Games: 100', '100'),
                      )
         for message, expected in test_data:
             result = Message.get_money(message)
