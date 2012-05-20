@@ -7,6 +7,9 @@ A tiny webapp for keeping a budget.
 
 budget-keeper tracks your expenditures via simple email messages.
 
+At its core, it's just a fancy email client that looks for messages
+you send to it that look like notes for your purchases and expenses.
+
 
 Usage
 -----
