@@ -111,6 +111,9 @@ class Account(object):
         Purchase(amount=Decimal('14.57'), category='groceries', ...)
         '''
         amount = Message.get_money(message)
+        if not amount:
+            return
+
         description = Message.get_description(message)
         for budget in self.budgets:
             # if description (minus nonletter characters) in categories:
@@ -197,8 +200,12 @@ class Message(object):
 
         # Try getting the extended description version:
         # Remove the money from the message.
-        money = re.escape(Message.get_money(message))
-        regex = r"( ?\$?(%s)[ ]?)" % money
+        money = Message.get_money(message)
+        if not money:
+            # Couldn't get a money from the message
+            return
+
+        regex = r"( ?\$?(%s)[ ]?)" % re.escape(money)
         msg = re.sub(regex, '', message, count=1)
 
         # Now grab all the parts of our description.
@@ -258,3 +265,18 @@ class Bill(Purchase):
         super(Bill, self).__init__(amount=amount, description=description,
                                    timestamp=timestamp, category=category)
         self.interval = interval
+
+def main():
+    '''Checks a mail account for new messages since the last time it checked,
+    and parse them for the account information.
+    Should be called on a cron.'''
+    from get_mail import get_mail
+    account = Account()
+    for message in get_mail():
+        print message
+        account.parse_message(message)
+
+    print account.balance
+
+if __name__ == "__main__":
+    main()
