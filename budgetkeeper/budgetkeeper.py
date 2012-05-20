@@ -115,7 +115,7 @@ class Account(object):
         # Or maybe put it in the body as multiple lines.
         >>> _ = account.add_budget('Groceries', interval=MONTHLY, limit=100, description="Monthly grocery allowance.")
         >>> _ = account.add_budget('Booze', interval=MONTHLY, limit=100, description="Monthly booze allowance.")
-        >>> account.parse_message('Paid $14.57 for groceries and $50 for booze.') # doctest: +ELLIPSIS
+        >>> account.parse_message('Paid $14.57 for groceries and paid $50 for booze.') # doctest: +ELLIPSIS
         [Purchase(amount=Decimal('14.57'), category='groceries', ...), Purchase(amount=Decimal('50.00'), category='booze', ...)]
         '''
         parts = message.split('and')
