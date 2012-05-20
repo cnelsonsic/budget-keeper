@@ -121,14 +121,11 @@ class Account(object):
         parts = message.split('and')
         purchases = []
         for message in parts:
-#             print 'message', message
             amount = Message.get_money(message)
-#             print 'amount', amount
             if not amount:
                 return
 
             description = Message.get_description(message)
-#             print 'description', description
 
             purchase = None
 
