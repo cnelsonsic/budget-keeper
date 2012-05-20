@@ -20,6 +20,7 @@ pip-log.txt
 .coverage
 .tox
 .pythoscope
+htmlcov
 
 #Translations
 *.mo
