@@ -108,15 +108,21 @@ class Account(object):
         The ideal format is "Paid ${money} for ${budget_category}"
         >>> _ = account.add_budget('Groceries', interval=MONTHLY, limit=100, description="Monthly grocery allowance.")
         >>> account.parse_message('Paid $14.57 for groceries.') # doctest: +ELLIPSIS
-        Purchase(amount=Decimal('14.57'), category='groceries', ...)
+        Purchase(amount=Decimal('14.57'), category='Groceries', ...)
+
+        Not enough time to type out a windy description? Works fine too:
+        >>> account.parse_message('100 groceries') # doctest: +ELLIPSIS
+        Purchase(amount=Decimal('100.00'), category='Groceries', ...)
+
+        You can also embed the category in a windy description.
+        >>> account.parse_message('Paid $100 for some groceries because I hunger.') # doctest: +ELLIPSIS
+        Purchase(amount=Decimal('100.00'), category='Groceries', description='Some groceries because i hunger.', ...)
 
         You can also add multiple expenditures to multiple categories:
-        # TODO: Split by "and" and ", ", then parse each hunk individually.
-        # Or maybe put it in the body as multiple lines.
         >>> _ = account.add_budget('Groceries', interval=MONTHLY, limit=100, description="Monthly grocery allowance.")
         >>> _ = account.add_budget('Booze', interval=MONTHLY, limit=100, description="Monthly booze allowance.")
         >>> account.parse_message('Paid $14.57 for groceries and paid $50 for booze.') # doctest: +ELLIPSIS
-        [Purchase(amount=Decimal('14.57'), category='groceries', ...), Purchase(amount=Decimal('50.00'), category='booze', ...)]
+        [Purchase(amount=Decimal('14.57'), category='Groceries', ...), Purchase(amount=Decimal('50.00'), category='Booze', ...)]
         '''
         parts = message.split('and')
         purchases = []
@@ -135,7 +141,8 @@ class Account(object):
                 category = re.sub(r'[^\w]*', '', description).lower()
                 if budget.name.lower() in category.lower():
                     # Set the category instead of the description
-                    purchase = self.add_purchase(amount, category=category, timestamp=timestamp)
+                    description = '' if budget.name.lower() == category.lower() else description
+                    purchase = self.add_purchase(amount, category=budget.name, timestamp=timestamp, description=description)
                     break
 
             purchases.append(purchase or self.add_purchase(amount, description, timestamp))
@@ -210,6 +217,8 @@ class Message(object):
         >>> Message.get_description("[18:34] <joe> I bought a new widget today, was only $0.99")
         '[18:34] <joe> I bought a new widget today, was only $0.99'
         '''
+        # TODO: pyparsing may be the way to go here.
+
         # Try to match the well behaved version first:
         description = re.match(r'(?:paid )?(?:bought )?(?P<first_desc>.*) for (?P<description>.*)', message.lower(), flags=re.IGNORECASE)
         if description:
