@@ -14,6 +14,9 @@ you send to it that look like notes for your purchases and expenses.
 Usage
 -----
 
+Send Yourself An Email.
+-----------------------
+-----------------------
 Send yourself an email with a subject like "Paid $14.57 for Groceries."
 budget-keeper will then add a $14.57 entry to the budget category "Groceries".
 Sticking to a well-formed format will ensure the best recognition of your data.
@@ -22,6 +25,7 @@ without an obvious category, it will just be entered in as a general expense.
 
 As far as formatting money goes, it can pick up pretty much anything you throw at it, as long as it's a number.
 The following are some known working examples:
+
 * '$4.12'
 * '$4'
 * '.12'
@@ -45,3 +49,22 @@ These formats will not match budget categories, but will enter expenditures into
     'Bought a new pair of pants for $5. Quite a steal.'
     '[18:34] <joe> I bought a new widget today, was only $0.99'
 
+Set Credentials
+---------------
+---------------
+
+Copy ``budget-keeper/budget-keeper.conf`` to ``~/.config/budget-keeper/budget-keeper.conf``, and open it up in your favorite text editor.
+
+Set your email and password. It's only stored in that folder on your disk. It's never sent anywhere but to your mail server to log you in.
+
+If you are using **GMail**, you're done.
+
+If you use some **other email server**, they should provide settings for "external clients".
+Set those in your new ``~/.config/budget-keeper/budget-keeper.conf``.
+
+Fire up budget-keeper
+---------------------
+---------------------
+```bash
+$ python budgetkeeper/budgetkeeper.py
+```

@@ -1,35 +1,49 @@
+def load_settings():
+    '''Get the settings files from across the filesystem.'''
+    import os
+    import xdg.BaseDirectory as bd
+    import ConfigParser
+    import sys
+    thismodule = sys.modules[__name__]
 
-# Shared settings:
-ACCOUNT_NAME = "example@gmail.com"
-EMAIL_ADDRESS = ACCOUNT_NAME
-PASSWORD = "testpassword"
+    config = ConfigParser.SafeConfigParser()
+    paths = []
+    for directory in reversed(bd.xdg_config_dirs):
+        path = os.path.join(directory, 'budget-keeper', 'budget-keeper.conf')
+        paths.append(path)
 
-# These two options are mutually exclusive.
-# IMAP is preferred, but your email server may
-# not support it.
-USE_IMAP = True
-USE_POP = False
+        if not os.path.exists(path):
+            # If the directory does not exist, make it
+            if not os.path.exists(os.path.dirname(path)):
+                try:
+                    os.makedirs(os.path.dirname(path))
+                except OSError:
+                    # Don't have permissions.
+                    pass
 
-# SMTP Settings:
-SMTP_SERVER = 'smtp.gmail.com'
-SMTP_USE_AUTHENTICATION = True
-USE_STARTTLS = True # Or SSL
-TLS_PORT = 587
-SSL_PORT = 465
+            # If there is no config there, copy the default to it.
+            if not os.path.exists(path):
+                import shutil
+                source = os.path.join(os.path.dirname(thismodule.__file__), 'budget-keeper.conf')
 
-# IMAP Settings:
-IMAP_SERVER = 'imap.gmail.com'
-IMAP_USE_SSL = True
-IMAP_PORT = 993
+                try:
+                    shutil.copy(source, path)
+                except IOError:
+                    # No permissions again.
+                    pass
 
-# POP Settings:
-POP_SERVER = 'pop.gmail.com'
-POP_USE_SSL = True
-POP_PORT = 995
+    config.read(paths)
 
-# Budget-keeper folder/label
-# Set this on your incoming mail with a filter or somesuch
-# And budget-keeper will only look at those mails.
-# By default, it just looks at your inbox (archived mail should be ignored)
-# LABEL = 'budget-keeper'
-LABEL = False
+    for section in config.sections():
+        for key, value in config.items(section):
+            try:
+                value = config.getboolean(section, key)
+                value = config.getint(section, key)
+            except ValueError:
+                # Just use whatever it was last.
+                pass
+
+            setting = '_'.join((section, key)).upper()
+            setattr(thismodule, setting, value)
+
+load_settings()

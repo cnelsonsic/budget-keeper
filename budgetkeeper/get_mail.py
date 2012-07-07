@@ -2,25 +2,22 @@
 import imaplib
 import email
 
-from settings import USE_IMAP, IMAP_SERVER, IMAP_PORT, IMAP_USE_SSL,\
-                     ACCOUNT_NAME, PASSWORD, LABEL, EMAIL_ADDRESS
-
-import pprint
+import settings
 
 def get_mail():
-    if USE_IMAP:
+    if settings.IMAP_ENABLED:
         # Log in to the IMAP account.
-        if IMAP_USE_SSL:
-            mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
+        if settings.IMAP_USE_SSL:
+            mail = imaplib.IMAP4_SSL(settings.IMAP_SERVER, settings.IMAP_PORT)
         else:
-            mail = imaplib.IMAP4(IMAP_SERVER, IMAP_PORT)
+            mail = imaplib.IMAP4(settings.IMAP_SERVER, settings.IMAP_PORT)
 
-        mail.login(ACCOUNT_NAME, PASSWORD)
+        mail.login(settings.AUTHENTICATION_EMAIL, settings.AUTHENTICATION_PASSWORD)
 
-        mail.select(LABEL or "inbox")
+        mail.select(settings.IMAP_LABEL or "inbox")
 
         # Get all mail from the user
-        result, data = mail.uid('search', None, '(FROM "%s")' % EMAIL_ADDRESS)
+        result, data = mail.uid('search', None, '(FROM "%s")' % settings.AUTHENTICATION_EMAIL)
         data = data[0].split()
         if result == "OK":
             for uid in data:
