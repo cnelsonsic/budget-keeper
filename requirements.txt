@@ -1,5 +1,3 @@
 python-dateutil
 cDecimal
-
-tornado
-jinja2
+xdg
